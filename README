@@ -1,5 +1,7 @@
 Some random small programs that might be useful.
 
+All are available under the very permissive MIT license.  See LICENSE.
+
 backup.py -- This is my backup system, using rsync and hardlinks.
 
 finddupes.py -- Find files with duplicate MD5 checksums.
