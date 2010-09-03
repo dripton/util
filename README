@@ -1,0 +1,13 @@
+Some random small programs that might be useful.
+
+backup.py -- This is my backup system, using rsync and hardlinks.
+
+finddupes.py -- Find files with duplicate MD5 checksums.
+
+nettest.py and parse_nettest.py -- Track the reliability of your network.
+
+number_oggs.py -- Add numbers to my music files so they sort correctly on
+my portable music player.
+
+portscan.py -- Multi-threaded port scanner to find where on my home network my
+print server is hiding today.
