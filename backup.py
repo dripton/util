@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """Backup most of a filesystem to a backup disk, using rsync."""
 
@@ -15,23 +15,29 @@ EXCLUDES = [
     "/mnt",
     "/media",
     "/tmp",
-    "/var/tmp",
     "/var/run",
     "/var/lock",
+    "/home/dripton/download",
 ]
 RSYNC = "/usr/bin/rsync"
 MOUNT = "/bin/mount"
+UMOUNT = "/bin/umount"
 
 def mount_backup_disk():
     cmd = [MOUNT]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     stdout, unused = proc.communicate()
-    if DESTINATION in stdout:
-        print "%s already mounted" % DESTINATION
+    if DESTINATION in stdout.decode():
+        print("%s already mounted" % DESTINATION)
         return
     cmd = [MOUNT, DESTINATION]
     returncode = subprocess.call(cmd)
-    print "%s returned %d" % (cmd, returncode)
+    print("%s returned %d" % (cmd, returncode))
+
+def umount_backup_disk():
+    cmd = [UMOUNT, DESTINATION]
+    returncode = subprocess.call(cmd)
+    print("%s returned %d" % (cmd, returncode))
 
 def find_latest_destdir():
     latest = 0
@@ -54,13 +60,14 @@ def do_rsync():
     cmd.append(SOURCE)
     timestamp = time.strftime("%Y%m%d%H%M%S")
     cmd.append(os.path.join(DESTINATION, timestamp))
-    print cmd
+    print(cmd)
     returncode = subprocess.call(cmd)
-    print "%s returned %d" % (cmd, returncode)
+    print("%s returned %d" % (cmd, returncode))
 
 def main():
     mount_backup_disk()
     do_rsync()
+    umount_backup_disk()
 
 
 if __name__ == "__main__":
