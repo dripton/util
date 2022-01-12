@@ -13,3 +13,5 @@ my portable music player.
 
 portscan.py -- Multi-threaded port scanner to find where on my home network my
 print server is hiding today.
+
+extract_rep_maxes.py -- Extract rep maxes from my lifting log.
