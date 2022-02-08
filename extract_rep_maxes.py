@@ -25,7 +25,7 @@ A # and anything after it in the line is a comment and ignored.
 """
 
 import argparse
-import pprint
+from math import exp
 import re
 import sys
 
@@ -48,8 +48,16 @@ multi_reps_x_weight_pattern = r"^\((\d+,.*\d)\)x(-?\d+\.?-?\d*)$"
 multi_reps_x_weight_matcher = re.compile(multi_reps_x_weight_pattern)
 
 
+def wathan_e1rm(reps: int, weight: float) -> float:
+    if reps == 1:
+        return weight
+    if reps > 10:
+        reps = 10
+    return 100 * weight / (48.8 + 53.8 * exp(-0.075 * reps))
+
+
 def add_to_rms(
-    rms: Dict[str, Dict[float, Tuple[int, str]]],
+    rms: Dict[str, Dict[float, Tuple[int, str, float]]],
     exercise: str,
     reps: int,
     weight: float,
@@ -62,18 +70,22 @@ def add_to_rms(
     if weight_to_reps_date is None:
         weight_to_reps_date = {}
         rms[exercise] = weight_to_reps_date
-    previous_best_reps, previous_date = weight_to_reps_date.get(
-        weight, (0, "")
-    )
+    previous_best_reps, _, _ = weight_to_reps_date.get(weight, (0, "", 0.0))
     if reps > previous_best_reps:
-        weight_to_reps_date[weight] = reps, current_date
+        weight_to_reps_date[weight] = (
+            reps,
+            current_date,
+            wathan_e1rm(reps, weight),
+        )
 
 
-def remove_lesser_rms(rms: Dict[str, Dict[float, Tuple[int, str]]]) -> None:
+def remove_lesser_rms(
+    rms: Dict[str, Dict[float, Tuple[int, str, float]]]
+) -> None:
     for exercise, weight_to_reps_date in rms.items():
         weights_to_remove = set()
-        for weight, (reps, date) in weight_to_reps_date.items():
-            for weight2, (reps2, date2) in weight_to_reps_date.items():
+        for weight, (reps, date, e1rm) in weight_to_reps_date.items():
+            for weight2, (reps2, date2, e1rm2) in weight_to_reps_date.items():
                 if (
                     reps2 >= reps
                     and weight2 >= weight
@@ -85,10 +97,22 @@ def remove_lesser_rms(rms: Dict[str, Dict[float, Tuple[int, str]]]) -> None:
             del weight_to_reps_date[weight]
 
 
+def output(
+    exercise_to_rms: Dict[str, Dict[float, Tuple[int, str, float]]]
+) -> None:
+    for exercise in sorted(exercise_to_rms, key=str.casefold):
+        print(exercise)
+        inner_dict = exercise_to_rms[exercise]
+        for weight, (reps, date, e1rm) in sorted(inner_dict.items()):
+            print(f"    {weight:7.2f}: {reps:3}  {date}  {e1rm:6.1f}")
+
+
 def read_weight_log(infile: IO, start_date: str, end_date: str) -> None:
     current_date = None
-    # exercise name to a list of (reps, weight) tuples
-    exercise_to_rms = {}  # type: Dict[str, Dict[float, Tuple[int, str]]]
+    # exercise_name: (weight, reps, e1rm)
+    exercise_to_rms = (
+        {}
+    )  # type: Dict[str, Dict[float, Tuple[int, str, float]]]
     for line in infile:
         line = line.strip()
         if not line or line.startswith("#"):
@@ -186,7 +210,7 @@ def read_weight_log(infile: IO, start_date: str, end_date: str) -> None:
                         )
                         continue
     remove_lesser_rms(exercise_to_rms)
-    pprint.pprint(exercise_to_rms)
+    output(exercise_to_rms)
 
 
 def main():
