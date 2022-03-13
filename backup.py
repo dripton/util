@@ -16,6 +16,7 @@ EXCLUDES = [
     "/media",
     "/tmp",
     "/var/run",
+    "/var/local",
     "/var/lock",
     "/home/dripton/download",
 ]
